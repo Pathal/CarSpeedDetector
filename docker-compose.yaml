@@ -1,0 +1,12 @@
+version: 3
+
+services:
+  detection:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - src:/src
+      - clips:/clips
+      - analysis:/analysis
+    entrypoint: /src/process_video.py

@@ -1,0 +1,9 @@
+{
+	"python.analysis.typeCheckingMode": "basic",
+	"python.analysis.autoImportCompletions": true,
+	"python.analysis.extraPaths": [
+		"/usr/local/lib/python3.13/dist-packages",
+		"/opt/venv/lib/python3.13/site-packages/"
+	],
+	"python.defaultInterpreterPath": "/opt/venv/bin/python"
+}
