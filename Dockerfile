@@ -27,23 +27,24 @@ RUN set -ex \
         libavformat-dev libswscale-dev libswresample-dev \
 		libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev libgstreamer-plugins-good1.0-dev
 
-# Handle pythong stuff
+# Handle python stuff
 ARG PYTHON_VENV=/opt/venv/
 ENV PATH="${PYTHON_VENV}bin:$PATH"
 RUN apt install -y python3.13-venv \
 	&& python3 -m venv ${PYTHON_VENV} \
-	&& python3 -m pip install numpy pandas flask
+	&& python3 -m pip install numpy pandas flask python-dotenv torchvision torch yolov5
+ENV PYTHONPATH="${PYTHON_VENV}bin:${PYTHON_VENV}/lib/site-packages:$PYTHONPATH"
 
 # Now handle OpenCV
 ARG OPENCV_VERSION=4.12.0
 RUN wget -q --no-check-certificate https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip -O opencv.zip \
-    && wget -q --no-check-certificate https://github.com/opencv/opencv_contrib/archive/${OPENCV_VERSION}.zip -O opencv_contrib.zip \
+    # && wget -q --no-check-certificate https://github.com/opencv/opencv_contrib/archive/${OPENCV_VERSION}.zip -O opencv_contrib.zip \
     && unzip -qq opencv.zip -d /opt && rm -rf opencv.zip \
-    && unzip -qq opencv_contrib.zip -d /opt && rm -rf opencv_contrib.zip \
+    # && unzip -qq opencv_contrib.zip -d /opt && rm -rf opencv_contrib.zip \
     && cmake \
         -D CMAKE_BUILD_TYPE=RELEASE \
         -D CMAKE_INSTALL_PREFIX=/usr/local \
-        -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-${OPENCV_VERSION}/modules \
+    #    -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-${OPENCV_VERSION}/modules \
         -D EIGEN_INCLUDE_PATH=/usr/include/eigen3 \
         -D OPENCV_ENABLE_NONFREE=ON \
         -D WITH_JPEG=ON \
@@ -90,11 +91,9 @@ RUN wget -q --no-check-certificate https://github.com/opencv/opencv/archive/${OP
     && make install \
     && rm -rf /opt/build/* \
     && rm -rf /opt/opencv-${OPENCV_VERSION} \
-    && rm -rf /opt/opencv_contrib-${OPENCV_VERSION}
+    # && rm -rf /opt/opencv_contrib-${OPENCV_VERSION}
 
-RUN python3 -m pip install python-dotenv torchvision torch yolov5
-ENV PYTHONPATH="${PYTHON_VENV}bin:${PYTHON_VENV}/lib/site-packages:$PYTHONPATH"
-
+COPY src /src
 
 # ARG USERNAME=xroot
 # ARG USER_UID=1000

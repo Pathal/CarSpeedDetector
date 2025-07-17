@@ -1,12 +1,16 @@
-version: 3
-
 services:
   detection:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
+    working_dir: /
     volumes:
-      - src:/src
-      - clips:/clips
-      - analysis:/analysis
-    entrypoint: /src/process_video.py
+      - ./env:/env
+      - ./src:/src
+      - ./clips:/clips
+      - ./analysis:/analysis
+    entrypoint: python3 /src/process_video.py
+    # stdin_open: true # docker run -i
+    # tty: true        # docker run -t
