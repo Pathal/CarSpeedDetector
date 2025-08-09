@@ -1,0 +1,12 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug Service",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "src/process_video.py",
+			"console": "integratedTerminal"
+		}
+	]
+}

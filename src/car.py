@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Union
 
 class Car:
 	"""
@@ -8,8 +8,12 @@ class Car:
 			 the (x2,y2) coordinate is the right side of the car from the camera's perspective
 	- "confidence": the confidence score of the detection
 	"""
+
+	BOX_EDGE_INDEX = 2 # Index of the right edge of the bounding box in the list
+
 	def __init__(self, box: List[int], confidence: float, frame_count: int):
 		self.speed_timing_frames = [] # List to store frame nums for speed calculation
+		self.timing_frame_column = [] # Store the column of the car's bounds for that frame
 		self.initial_box = box
 		self.last_update = frame_count
 		self.current_box = box
@@ -47,6 +51,8 @@ class Car:
 	
 	def update_box(self, new_box: List[int], confidence: float, frame_count: int):
 		"""
+		MUST BE CALLED BEFORE ANY OTHER METHOD THAT USES THIS OBJECT
+
 		new_box: the bounding box coordinates of the car in the format [x1, y1, x2, y2]
 		confidence: new confidence value
 		"""
@@ -57,12 +63,46 @@ class Car:
 		self.current_center = ((new_box[0]+new_box[2])/2, (new_box[1]+new_box[3])/2)
 
 	def start_tracking(self, frame_id: int):
+		"""
+		Must be called after update_box to start tracking the car
+		"""
 		if len(self.speed_timing_frames) == 0:
 			self.speed_timing_frames.append(frame_id)
+			self.timing_frame_column.append(self.current_box[Car.BOX_EDGE_INDEX])
 
 	def end_tracking(self, frame_id: int):
+		"""
+		Must be called after update_box to stop tracking the car
+		"""
 		if len(self.speed_timing_frames) == 1:
 			self.speed_timing_frames.append(frame_id)
+			self.timing_frame_column.append(self.current_box[Car.BOX_EDGE_INDEX])
+
+	def get_end_column(self, default_value: int) -> int:
+		"""
+		Returns the column of the car's bounds at the end of the speed tracking
+		or a default value if not available
+		"""
+		if len(self.timing_frame_column) < 2:
+			return default_value
+		return self.timing_frame_column[1]
+	
+	def get_end_frame_count(self, default_value: int) -> int:
+		"""
+		Returns the frame count at the end of the speed tracking
+		or a default value if not available
+		"""
+		if len(self.speed_timing_frames) < 2:
+			return default_value
+		return self.speed_timing_frames[1]
+	
+	def get_tracked_distance_pixels(self) -> Union[int, None]:
+		"""
+		Returns the distance in pixels between the start and end of the speed tracking
+		"""
+		if len(self.timing_frame_column) == 0:
+			return None
+		return self.get_end_column(self.current_box[Car.BOX_EDGE_INDEX]) - self.timing_frame_column[0]
 
 	def is_expired(self, frame_count: int, expiration_count: int) -> bool:
 		"""

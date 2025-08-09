@@ -74,15 +74,17 @@ def find_closest_car(cars: Set[Car], box: List[int]) -> Union[Car, None]:
 	return None
 
 def annotate_with_speed(frame: cv2.typing.MatLike, car: Car, frame_count: int, framerate: float):
+	# Ignore if we aren't tracking the car yet
 	if len(car.speed_timing_frames) == 0:
 		return
-	# clamp the pixel position to the measured window
-	end_pixel = car.current_box[2] if car.current_box[2] < pixel_right else pixel_right
 	# clamp the frame count to whatever is listed for the tracked car
 	# this stops the calculation from shifting after we stop the timer
-	end_frame = frame_count if len(car.speed_timing_frames) == 1 else car.speed_timing_frames[1]
-	# 					actual_distance * percentage of the pixel_distance
-	meters = actual_distance * (end_pixel - pixel_left) / float(pixel_right-pixel_left)
+	end_frame = car.get_end_frame_count(frame_count)
+	tracked_distance_pixels = car.get_tracked_distance_pixels()
+	if tracked_distance_pixels is None:
+		return
+	# (actual distance * scaled pixel distance) roughly eaquals scaled actual distance
+	meters = actual_distance * tracked_distance_pixels / float(pixel_right-pixel_left)
 	if (end_frame-car.speed_timing_frames[0]) == 0 or framerate == 0:
 		return
 	seconds = (end_frame-car.speed_timing_frames[0])/framerate
